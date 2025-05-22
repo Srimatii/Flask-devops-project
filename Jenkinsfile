@@ -1,28 +1,29 @@
 pipeline {
     agent any
-
     stages {
-        stage('Clone') {
+        stage('Clone Repo') {
             steps {
-                echo 'Cloning repository...'
+                git 'https://github.com/yourusername/devops-flask-app.git'
             }
         }
-
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building project...'
+                script {
+                    docker.build("flask-devops")
+                }
             }
         }
-
-        stage('Test') {
+        stage('Push to Docker Hub') {
             steps {
-                echo 'Running tests...'
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
+                    sh 'docker tag flask-devops yourdockerhub/flask-devops:latest'
+                    sh 'docker push yourdockerhub/flask-devops:latest'
+                }
             }
         }
-
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
-                echo 'Deploying...'
+                sh 'kubectl apply -f k8s/deployment.yaml'
             }
         }
     }
